@@ -37,6 +37,7 @@ function Get-NetTcpProcess
         else 
         {
             $Connections = Get-NetTCPConnection
+            $process = Get-Process |Select-Object -Property Path,Name,Id
         }
         $FinalOutput = @()
     }
@@ -46,7 +47,7 @@ function Get-NetTcpProcess
         {
             $TempOutput = New-Object -TypeName NetTcpProcessOutput
             $id = $conn.OwningProcess
-            $proc = (get-process | Select-Object -Property path,name,id | Where-Object -Property id -eq $id)
+            $proc = ($process | Where-Object -Property id -eq $id)
             $TempOutput.Address = [ipaddress]$conn.LocalAddress
             $TempOutput.Path = $proc.Path
             $TempOutput.Port = $conn.LocalPort
