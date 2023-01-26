@@ -1,6 +1,7 @@
 <#
 .Synopsis
    Get-NetTcpProcess
+   Code by Joe Brown (joeb1kenobe) fell free to use this code, but do not republish as your own. If you discover a bug or see a way to imporve the code, please submit a pull request at https://github.com/joeb1kenobe/GetNetTcpProcess
 .DESCRIPTION
    Get-NetTcpProcess will combine output from Get-Processes and Get-NetTCPConnections to provide a list of TCP connections and the associated processes.
 .EXAMPLE
