@@ -1,13 +1,24 @@
 <#
-.Synopsis
-   Get-NetTcpProcess
-   Code by Joe Brown (joeb1kenobe) fell free to use this code, but do not republish as your own. If you discover a bug or see a way to imporve the code, please submit a pull request at https://github.com/joeb1kenobe/GetNetTcpProcess
+.SYNOPSIS
+Get-NetTcpProcess
+#Code by Joe Brown (joeb1kenobe) fell free to use this code, but do not republish as your own. If you discover a bug or see a way to imporve the code, please submit a pull request at https://github.com/joeb1kenobe/GetNetTcpProcess
 .DESCRIPTION
-   Get-NetTcpProcess will combine output from Get-Processes and Get-NetTCPConnections to provide a list of TCP connections and the associated processes.
+Get-NetTcpProcess will combine output from Get-Processes and Get-NetTCPConnections to provide a list of TCP connections and the associated processes.
+.PARAMETER State
+Includes the process command-line in the output
+.PARAMETER Parent
+Includes the process parent in the output
+.PARAMETER State
+Limits the output to one of three different network states: Listen, Established, Bound
 .EXAMPLE
-   Get-NetTcpProcess
+# Will list all ports and processes that have the Network State Bound with the Command-Line that was used to start the process - if available.
+Get-NetTcpProcess -State Bound -CommandLine
 .EXAMPLE
-   Get-NetTcpProcess -state Listen
+# Will list all ports and processes that have the Network State Listen with the parent that started the process - if available
+Get-NetTcpProcess -state Listen -Parent
+.EXAMPLE
+# Will list the process that has port 445 open
+Get-NetTcpProcess | Where-Object -Property Port -eq 445
 #>
 class NetTcpProcessOutput
 {
