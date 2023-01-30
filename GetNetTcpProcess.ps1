@@ -16,6 +16,8 @@ class NetTcpProcessOutput
     [string]$State
     [string]$Path
     [string]$ProcessName
+    [string]$ParentProcess
+    [string]$ProcessCommandLine
 }
 function Get-NetTcpProcess
 {
@@ -26,7 +28,11 @@ function Get-NetTcpProcess
     (
         [ValidateSet("Listen","Established","Bound")]
         [string]
-        $state
+        $State,
+        [switch]
+        $CommandLine,
+        [switch]
+        $Parent
     )
 
     Begin
@@ -38,7 +44,7 @@ function Get-NetTcpProcess
         else 
         {
             $Connections = Get-NetTCPConnection
-            $process = Get-Process |Select-Object -Property Path,Name,Id
+            $process = Get-Process |Select-Object -Property Path,Name,Id,CommandLine,Parent
         }
         $FinalOutput = @()
     }
@@ -54,11 +60,28 @@ function Get-NetTcpProcess
             $TempOutput.Port = $conn.LocalPort
             $TempOutput.ProcessName = $proc.name
             $TempOutput.State = $conn.State
+            $TempOutput.ParentProcess = $proc.Parent
+            $TempOutput.ProcessCommandLine = $proc.CommandLine
             $FinalOutput += $TempOutput
         }
     }
     End
     {
-        $FinalOutput
+        if ($Parent -eq $false -and $CommandLine -eq $false)
+        {
+            $FinalOutput | Select-Object -Property Address,Port,ProcessName,Path,State
+        }
+        elseif ($Parent -eq $true -and $CommandLine -eq $false)
+        {
+            $FinalOutput | Select-Object -Property Address,Port,ProcessName,Path,ParentProcess,State
+        }
+        elseif ($Parent -eq $false -and $CommandLine -eq $true)
+        {
+            $FinalOutput | Select-Object -Property Address,Port,ProcessName,Path,ProcessCommandLine,State
+        }
+        else 
+        {
+            $FinalOutput | Select-Object -Property Address,Port,ProcessName,Path,ProcessCommandLine,ParentProcess,State
+        }
     }
 }
