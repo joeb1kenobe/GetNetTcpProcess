@@ -353,7 +353,8 @@ Describe 'Help and release metadata' {
         $script:manifest.Description | Should -Not -BeNullOrEmpty
         $script:manifest.ReleaseNotes | Should -Not -BeNullOrEmpty
         $script:manifest.ProjectUri | Should -Be 'https://github.com/joeb1kenobe/GetNetTcpProcess'
-        $script:manifest.LicenseUri | Should -Be 'https://github.com/joeb1kenobe/GetNetTcpProcess/blob/main/LICENSE'
+        # Pinned to the version's tag, so each gallery version links to its own license.
+        $script:manifest.LicenseUri | Should -Be "https://github.com/joeb1kenobe/GetNetTcpProcess/blob/v$($script:manifest.Version)/LICENSE"
     }
 
     It 'Has a CHANGELOG entry for the manifest version as its newest release' {

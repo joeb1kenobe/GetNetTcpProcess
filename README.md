@@ -174,7 +174,7 @@ Port Address ProcessName ProcessId Path
 
 - [Command reference](docs/Get-NetTcpProcess.md)
 - [Changelog](CHANGELOG.md)
-- [License](LICENSE) (GNU GPL v3)
+- [License](LICENSE) (MIT)
 - [PowerShell Gallery page](https://www.powershellgallery.com/packages/GetNetTcpProcess)
 
 ## Tests
