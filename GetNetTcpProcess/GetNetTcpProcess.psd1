@@ -12,7 +12,7 @@
 RootModule = 'GetNetTcpProcess.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0.0'
+ModuleVersion = '1.0.1'
 
 # Supported PSEditions
 CompatiblePSEditions = 'Desktop', 'Core'
@@ -30,7 +30,7 @@ CompanyName = 'Joe Brown'
 Copyright = '(c) 2023 Joe Brown. Licensed under the GNU General Public License v3.0.'
 
 # Description of the functionality provided by this module
-Description = 'Lists TCP connections together with the process that owns each one (name, ID, path, and optionally parent and command line), combining Get-NetTCPConnection with Win32_Process. A PowerShell take on netstat -ano for Windows.'
+Description = 'Shows which process owns each TCP port on Windows, like netstat -ano but returning PowerShell objects. Get-NetTcpProcess combines Get-NetTCPConnection with Win32_Process and returns one object per connection with the local and remote address and port, the TCP state, and the owning process name, ID and path. Optional switches add the parent process and the command line. Filter by one or more TCP states with -State. Works in Windows PowerShell 5.1 and PowerShell 7+ on Windows.'
 
 # Minimum version of the PowerShell engine required by this module
 PowerShellVersion = '5.1'
@@ -107,7 +107,7 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        # ReleaseNotes = ''
+        ReleaseNotes = '1.0.1: Documentation only; no change in behavior. Adds a full README, a command reference (docs/Get-NetTcpProcess.md) and a changelog; completes the comment-based help (all parameters, output properties, eight examples, notes) so Get-Help Get-NetTcpProcess -Full and -Online are useful. See https://github.com/joeb1kenobe/GetNetTcpProcess/blob/main/CHANGELOG.md'
 
         # Prerelease string of this module
         # Prerelease = ''

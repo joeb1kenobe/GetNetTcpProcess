@@ -320,6 +320,50 @@ Describe 'Get-NetTcpProcess' {
     }
 }
 
+Describe 'Help and release metadata' {
+    BeforeAll {
+        $script:help = Get-Help -Name Get-NetTcpProcess -Full
+        $script:manifest = Test-ModuleManifest -Path $manifestPath
+    }
+
+    It 'Has a synopsis and description' {
+        $script:help.Synopsis | Should -Not -BeNullOrEmpty
+        ($script:help.Description.Text -join ' ') | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Describes parameter <_>' -ForEach @('State', 'Parent', 'CommandLine') {
+        $parameterHelp = $script:help.Parameters.Parameter | Where-Object -Property Name -EQ $_
+        ($parameterHelp.Description.Text -join ' ') | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Has at least six examples, each with code and an explanation' {
+        @($script:help.Examples.Example).Count | Should -BeGreaterOrEqual 6
+        foreach ($example in $script:help.Examples.Example)
+        {
+            $example.Code | Should -Match 'Get-NetTcpProcess'
+            ($example.Remarks.Text -join ' ').Trim() | Should -Not -BeNullOrEmpty
+        }
+    }
+
+    It 'Links to the online command reference' {
+        $script:help.RelatedLinks.NavigationLink[0].Uri | Should -Be 'https://github.com/joeb1kenobe/GetNetTcpProcess/blob/main/docs/Get-NetTcpProcess.md'
+    }
+
+    It 'Has gallery metadata in the manifest' {
+        $script:manifest.Description | Should -Not -BeNullOrEmpty
+        $script:manifest.ReleaseNotes | Should -Not -BeNullOrEmpty
+        $script:manifest.ProjectUri | Should -Be 'https://github.com/joeb1kenobe/GetNetTcpProcess'
+        $script:manifest.LicenseUri | Should -Be 'https://github.com/joeb1kenobe/GetNetTcpProcess/blob/main/LICENSE'
+    }
+
+    It 'Has a CHANGELOG entry for the manifest version as its newest release' {
+        $changelog = Get-Content -Path (Join-Path -Path $PSScriptRoot -ChildPath 'CHANGELOG.md')
+        $newest = $changelog | Where-Object -FilterScript { $_ -match '^## \[(\d+\.\d+\.\d+)\]' } | Select-Object -First 1
+        $newest | Should -Match ('^## \[' + [regex]::Escape($script:manifest.Version.ToString()) + '\]')
+        $script:manifest.ReleaseNotes | Should -Match ([regex]::Escape($script:manifest.Version.ToString()))
+    }
+}
+
 AfterAll {
     Remove-Module -Name GetNetTcpProcess -ErrorAction SilentlyContinue
 }

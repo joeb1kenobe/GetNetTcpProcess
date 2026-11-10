@@ -3,52 +3,119 @@
 Lists TCP connections together with the process that owns each one.
 
 .DESCRIPTION
-Get-NetTcpProcess combines the output of Get-NetTCPConnection with process
-information from the Win32_Process CIM class, so you can see which process
-owns which TCP port. It works in Windows PowerShell 5.1 and PowerShell 7+
-on Windows.
+Get-NetTcpProcess shows which process owns each TCP port: a PowerShell
+version of netstat -ano that returns objects. It combines
+Get-NetTCPConnection with process information from the Win32_Process CIM
+class, and returns one object per connection with the local and remote
+endpoints, the TCP state, and the owning process's name, ID and path.
+Use -Parent and -CommandLine to add the parent process and the command line.
+
+It works in Windows PowerShell 5.1 and PowerShell 7+ on Windows.
+
+.PARAMETER State
+Returns only connections in the given TCP states. Accepts one or more of:
+Closed, Listen, SynSent, SynReceived, Established, FinWait1, FinWait2,
+CloseWait, Closing, LastAck, TimeWait, DeleteTCB, Bound.
+
+The states are passed to Get-NetTCPConnection, so the result is what that
+cmdlet returns for the same states. A state with no connections returns
+nothing, without an error. Connections whose state has no name (shown as a
+number, such as 0) cannot be selected with -State.
+
+.PARAMETER Parent
+Adds the ParentProcessId and ParentProcess (the parent's process name)
+properties.
+
+ParentProcess is empty when the parent has exited, when its PID now belongs
+to a newer, unrelated process, or when the parent PID is 0 or the process's
+own PID (as for the System Idle Process and System).
+
+.PARAMETER CommandLine
+Adds the ProcessCommandLine property: the command line used to start the
+owning process.
+
+.EXAMPLE
+Get-NetTcpProcess | Where-Object -Property Port -EQ 445
+
+Shows which process has local port 445 open.
+
+.EXAMPLE
+Get-NetTcpProcess -State Listen -Parent | Sort-Object -Property Port | Format-Table -Property Port, Address, ProcessName, ProcessId, ParentProcess
+
+Lists all listening ports in port order, with the owning process and the
+process that started it.
+
+.EXAMPLE
+Get-NetTcpProcess | Group-Object -Property ProcessName -NoElement | Sort-Object -Property Count -Descending | Select-Object -First 10
+
+Shows the ten processes that own the most TCP connections.
+
+.EXAMPLE
+Get-NetTcpProcess | Where-Object -Property ProcessName -EQ 'svchost' | Format-Table -Property ProcessId, Port, State, RemoteAddress, RemotePort
+
+Lists every connection owned by a process, by process name (without .exe).
+
+.EXAMPLE
+Get-NetTcpProcess -State Established | Format-Table -Property ProcessName, ProcessId, Port, RemoteAddress, RemotePort
+
+Lists established connections with the remote address and port each
+process is connected to.
+
+.EXAMPLE
+Get-NetTcpProcess -State Listen -CommandLine | Format-List -Property Port, ProcessName, ProcessCommandLine
+
+Shows the full command line of each listening process.
+
+.EXAMPLE
+Get-NetTcpProcess -State Listen -Parent -CommandLine | Export-Csv -Path .\listeners.csv -NoTypeInformation
+
+Saves all listening ports, with parent and command line, to a CSV file.
+
+.EXAMPLE
+Get-NetTcpProcess -State Listen | Sort-Object -Property Port | Format-Table -Property Port, Address, ProcessName, ProcessId, Path -AutoSize
+
+Shows listening ports as a compact table with the columns you choose.
+
+.INPUTS
+None. You cannot pipe objects to Get-NetTcpProcess.
+
+.OUTPUTS
+System.Management.Automation.PSCustomObject
+
+One object per TCP connection, with these properties:
+Address (local IP address), Port (local port), ProcessName, ProcessId,
+Path, ProcessCommandLine (only with -CommandLine), ParentProcessId and
+ParentProcess (only with -Parent), State, RemoteAddress and RemotePort.
+
+.NOTES
+Without an elevated (Run as administrator) session, Path,
+ProcessCommandLine and the parent of processes that run as another user,
+including SYSTEM services, may be empty.
+
+Some connections have a state that Windows reports with no name. State then
+shows the raw number, such as 0, instead of a blank.
+
+On machines with many sockets, such as those running Docker Desktop, the TCP
+table can change between queries: the same socket may be reported as
+Listen in one call and Closed or 0 in the next.
+
+Objects have more than four properties, so PowerShell shows them as a list
+by default. Format-Table drops columns that do not fit the window, so pick
+the columns you need with -Property.
 
 Code by Joe Brown (joeb1kenobe). Feel free to use this code, but do not
 republish it as your own. If you discover a bug or see a way to improve the
 code, please submit a pull request at
 https://github.com/joeb1kenobe/GetNetTcpProcess
 
-.PARAMETER State
-Limits the output to connections in one or more TCP states: Closed, Listen,
-SynSent, SynReceived, Established, FinWait1, FinWait2, CloseWait, Closing,
-LastAck, TimeWait, DeleteTCB, Bound.
+.LINK
+https://github.com/joeb1kenobe/GetNetTcpProcess/blob/main/docs/Get-NetTcpProcess.md
 
-.PARAMETER CommandLine
-Adds the ProcessCommandLine property: the command line used to start the
-owning process, if available.
+.LINK
+Get-NetTCPConnection
 
-.PARAMETER Parent
-Adds the ParentProcessId and ParentProcess (parent process name) properties,
-if available.
-
-.EXAMPLE
-Get-NetTcpProcess -State Bound -CommandLine
-
-Lists all ports in the Bound state, with the command line used to start the
-owning process.
-
-.EXAMPLE
-Get-NetTcpProcess -State Listen, Established -Parent
-
-Lists all listening and established connections, with the parent of the
-owning process.
-
-.EXAMPLE
-Get-NetTcpProcess | Where-Object -Property Port -EQ 445
-
-Shows the process that has local port 445 open.
-
-.OUTPUTS
-System.Management.Automation.PSCustomObject
-
-.NOTES
-Without elevation, Path, ProcessCommandLine and the parent of processes that
-run as another user (including SYSTEM services) may be empty.
+.LINK
+https://github.com/joeb1kenobe/GetNetTcpProcess
 #>
 function Get-NetTcpProcess
 {
