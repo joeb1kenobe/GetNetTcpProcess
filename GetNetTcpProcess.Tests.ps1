@@ -1,7 +1,8 @@
 #Requires -Modules @{ ModuleName = 'Pester'; ModuleVersion = '5.0.0' }
 
 BeforeAll {
-    . (Join-Path -Path $PSScriptRoot -ChildPath 'GetNetTcpProcess.ps1')
+    $manifestPath = Join-Path -Path $PSScriptRoot -ChildPath 'GetNetTcpProcess\GetNetTcpProcess.psd1'
+    Import-Module -Name $manifestPath -Force
 
     function Get-FakeConnection
     {
@@ -47,14 +48,14 @@ BeforeAll {
 
 Describe 'Get-NetTcpProcess' {
     BeforeEach {
-        Mock Get-NetTCPConnection {
+        Mock Get-NetTCPConnection -ModuleName GetNetTcpProcess {
             $script:listenConnection
             $script:webConnection
             $script:establishedConnection
         }
         # Like the real cmdlet, -State filters, and a state with no connections
         # writes a non-terminating ObjectNotFound error.
-        Mock Get-NetTCPConnection -ParameterFilter { $null -ne $State } {
+        Mock Get-NetTCPConnection -ModuleName GetNetTcpProcess -ParameterFilter { $null -ne $State } {
             $all = $script:listenConnection, $script:webConnection, $script:establishedConnection
             foreach ($requested in $State)
             {
@@ -68,7 +69,7 @@ Describe 'Get-NetTcpProcess' {
             }
         }
 
-        Mock Get-CimInstance -ParameterFilter { $ClassName -eq 'Win32_Process' } {
+        Mock Get-CimInstance -ModuleName GetNetTcpProcess -ParameterFilter { $ClassName -eq 'Win32_Process' } {
             Get-FakeProcess -ProcessId 4 -Name 'System' -ParentProcessId 0
             Get-FakeProcess -ProcessId 900 -Name 'explorer.exe' -ExecutablePath 'C:\Windows\explorer.exe' `
                 -ParentProcessId 800 -CreationDate ([datetime]'2026-01-01 08:00')
@@ -90,7 +91,7 @@ Describe 'Get-NetTcpProcess' {
             $web.Path | Should -Be 'C:\Program Files\nodejs\node.exe'
             $web.Address | Should -Be ([ipaddress]'127.0.0.1')
             $web.State | Should -Be 'Listen'
-            Should -Invoke Get-CimInstance -Times 1 -Exactly
+            Should -Invoke Get-CimInstance -ModuleName GetNetTcpProcess -Times 1 -Exactly
         }
 
         It 'Includes the remote endpoint' {
@@ -117,14 +118,14 @@ Describe 'Get-NetTcpProcess' {
             $result.State | Should -Not -Contain 'Established'
             ($result | Where-Object Port -EQ 8080).ProcessName | Should -Be 'node'
             ($result | Where-Object Port -EQ 445).ProcessName | Should -Be 'System'
-            Should -Invoke Get-NetTCPConnection -Times 1 -Exactly -ParameterFilter { $State -contains 'Listen' }
+            Should -Invoke Get-NetTCPConnection -ModuleName GetNetTcpProcess -Times 1 -Exactly -ParameterFilter { $State -contains 'Listen' }
         }
 
         It 'Passes several states in one call' {
             $result = @(Get-NetTcpProcess -State Listen, Established)
 
             $result.Count | Should -Be 3
-            Should -Invoke Get-NetTCPConnection -Times 1 -Exactly -ParameterFilter {
+            Should -Invoke Get-NetTCPConnection -ModuleName GetNetTcpProcess -Times 1 -Exactly -ParameterFilter {
                 $State -contains 'Listen' -and $State -contains 'Established'
             }
         }
@@ -132,13 +133,13 @@ Describe 'Get-NetTcpProcess' {
         It 'Does not call Get-NetTCPConnection with -State when no state is given' {
             $null = Get-NetTcpProcess
 
-            Should -Invoke Get-NetTCPConnection -Times 1 -Exactly -ParameterFilter { $null -eq $State }
+            Should -Invoke Get-NetTCPConnection -ModuleName GetNetTcpProcess -Times 1 -Exactly -ParameterFilter { $null -eq $State }
         }
 
         It 'Keeps every connection Get-NetTCPConnection returns, without filtering again' {
             # Regression: with thousands of sockets, the state the cmdlet reports
             # on an object can disagree with the state it was queried by.
-            Mock Get-NetTCPConnection -ParameterFilter { $State -contains 'Listen' } {
+            Mock Get-NetTCPConnection -ModuleName GetNetTcpProcess -ParameterFilter { $State -contains 'Listen' } {
                 Get-FakeConnection -LocalAddress '127.0.0.1' -LocalPort 5432 -State 'Closed' -OwningProcess 1000
             }
 
@@ -159,14 +160,18 @@ Describe 'Get-NetTcpProcess' {
 
             $result | Should -BeNullOrEmpty
             $getErrors | Should -BeNullOrEmpty
-            Should -Invoke Get-NetTCPConnection -Times 1 -Exactly -ParameterFilter { $State -contains 'Bound' }
-            Should -Invoke Get-CimInstance -Times 0 -Exactly
+            Should -Invoke Get-NetTCPConnection -ModuleName GetNetTcpProcess -Times 1 -Exactly -ParameterFilter { $State -contains 'Bound' }
+            Should -Invoke Get-CimInstance -ModuleName GetNetTcpProcess -Times 0 -Exactly
         }
 
-        It 'Does not throw when the caller''s $ErrorActionPreference is Stop' {
-            $ErrorActionPreference = 'Stop'
+        It 'Calls Get-NetTCPConnection with -ErrorAction Continue, so a caller''s Stop preference cannot turn "no results" into a throw' {
+            # Asserted on the call: a module-scoped mock body ignores the
+            # -ErrorAction it is given and uses the test's own preference.
+            $null = Get-NetTcpProcess -State Bound
 
-            { Get-NetTcpProcess -State Bound } | Should -Not -Throw
+            Should -Invoke Get-NetTCPConnection -ModuleName GetNetTcpProcess -Times 1 -Exactly -ParameterFilter {
+                $ErrorAction -eq 'Continue'
+            }
         }
 
         It 'Returns the matching states when only some states have connections' {
@@ -178,14 +183,14 @@ Describe 'Get-NetTcpProcess' {
         }
 
         It 'Returns nothing when there are no connections at all' {
-            Mock Get-NetTCPConnection { }
+            Mock Get-NetTCPConnection -ModuleName GetNetTcpProcess { }
 
             Get-NetTcpProcess | Should -BeNullOrEmpty
-            Should -Invoke Get-CimInstance -Times 0 -Exactly
+            Should -Invoke Get-CimInstance -ModuleName GetNetTcpProcess -Times 0 -Exactly
         }
 
         It 'Passes other errors from Get-NetTCPConnection on to the caller' {
-            Mock Get-NetTCPConnection -ParameterFilter { $State -contains 'Listen' } {
+            Mock Get-NetTCPConnection -ModuleName GetNetTcpProcess -ParameterFilter { $State -contains 'Listen' } {
                 Write-Error -Message 'Access denied' -Category PermissionDenied
             }
 
@@ -193,7 +198,7 @@ Describe 'Get-NetTcpProcess' {
         }
 
         It 'Reports other errors as non-terminating by default' {
-            Mock Get-NetTCPConnection { Write-Error -Message 'Access denied' -Category PermissionDenied }
+            Mock Get-NetTCPConnection -ModuleName GetNetTcpProcess { Write-Error -Message 'Access denied' -Category PermissionDenied }
 
             $null = Get-NetTcpProcess -ErrorVariable getErrors -ErrorAction SilentlyContinue
 
@@ -219,12 +224,12 @@ Describe 'Get-NetTcpProcess' {
 
         It 'Leaves ParentProcess empty when the parent PID is 0 or the process itself' {
             # As on a real system: Idle (0) reports itself as parent, System (4) reports 0.
-            Mock Get-CimInstance -ParameterFilter { $ClassName -eq 'Win32_Process' } {
+            Mock Get-CimInstance -ModuleName GetNetTcpProcess -ParameterFilter { $ClassName -eq 'Win32_Process' } {
                 Get-FakeProcess -ProcessId 0 -Name 'System Idle Process' -ParentProcessId 0
                 Get-FakeProcess -ProcessId 4 -Name 'System' -ParentProcessId 0
                 Get-FakeProcess -ProcessId 1000 -Name 'node.exe' -ParentProcessId 1000
             }
-            Mock Get-NetTCPConnection {
+            Mock Get-NetTCPConnection -ModuleName GetNetTcpProcess {
                 Get-FakeConnection -LocalAddress '10.0.0.4' -LocalPort 43420 -State 'TimeWait' -OwningProcess 0
                 $script:listenConnection
                 $script:webConnection
@@ -243,7 +248,7 @@ Describe 'Get-NetTcpProcess' {
         }
 
         It 'Ignores a parent PID that was reused by a newer process' {
-            Mock Get-CimInstance -ParameterFilter { $ClassName -eq 'Win32_Process' } {
+            Mock Get-CimInstance -ModuleName GetNetTcpProcess -ParameterFilter { $ClassName -eq 'Win32_Process' } {
                 Get-FakeProcess -ProcessId 900 -Name 'impostor.exe' -ParentProcessId 1 -CreationDate ([datetime]'2026-06-01')
                 Get-FakeProcess -ProcessId 1000 -Name 'node.exe' -ParentProcessId 900 -CreationDate ([datetime]'2026-01-01')
             }
@@ -272,7 +277,7 @@ Describe 'Get-NetTcpProcess' {
 
     Context 'State with no enum name' {
         BeforeEach {
-            Mock Get-NetTCPConnection {
+            Mock Get-NetTCPConnection -ModuleName GetNetTcpProcess {
                 $script:unnamedStateConnection
                 $script:webConnection
             }
@@ -288,18 +293,18 @@ Describe 'Get-NetTcpProcess' {
         It 'Leaves named states and -State results unchanged' {
             (Get-NetTcpProcess | Where-Object Port -EQ 8080).State | Should -BeExactly 'Listen'
 
-            Mock Get-NetTCPConnection -ParameterFilter { $State -contains 'Listen' } { $script:webConnection }
+            Mock Get-NetTCPConnection -ModuleName GetNetTcpProcess -ParameterFilter { $State -contains 'Listen' } { $script:webConnection }
             $result = @(Get-NetTcpProcess -State Listen)
 
             $result.Count | Should -Be 1
             $result[0].State | Should -BeExactly 'Listen'
-            Should -Invoke Get-NetTCPConnection -Times 1 -Exactly -ParameterFilter { $State -contains 'Listen' }
+            Should -Invoke Get-NetTCPConnection -ModuleName GetNetTcpProcess -Times 1 -Exactly -ParameterFilter { $State -contains 'Listen' }
         }
     }
 
     Context 'PID with no matching process' {
         BeforeEach {
-            Mock Get-NetTCPConnection { $script:orphanConnection }
+            Mock Get-NetTCPConnection -ModuleName GetNetTcpProcess { $script:orphanConnection }
         }
 
         It 'Still returns the connection, with empty process details' {
@@ -313,4 +318,8 @@ Describe 'Get-NetTcpProcess' {
             $orphan.ParentProcess | Should -BeNullOrEmpty
         }
     }
+}
+
+AfterAll {
+    Remove-Module -Name GetNetTcpProcess -ErrorAction SilentlyContinue
 }

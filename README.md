@@ -1,17 +1,27 @@
 # GetNetTcpProcess
-PowerShell function that combines Get-NetTCPConnection with process information so you can easily see each port and the process that has it open.
+PowerShell module that combines Get-NetTCPConnection with process information so you can easily see each port and the process that has it open.
 
 Works in Windows PowerShell 5.1 and PowerShell 7+ on Windows.
 
-## Usage
+## Install
 
-Dot-source the script to load the `Get-NetTcpProcess` function into your session:
+Install the module from the PowerShell Gallery:
 
 ```powershell
-. .\GetNetTcpProcess.ps1
+Install-Module GetNetTcpProcess
 ```
 
-Then, for example:
+To use it from a clone of this repository instead:
+
+```powershell
+Import-Module .\GetNetTcpProcess\GetNetTcpProcess.psd1
+```
+
+Dot-sourcing `GetNetTcpProcess.ps1`, as earlier versions did, still works: it now imports the module.
+
+## Usage
+
+For example:
 
 ```powershell
 Get-NetTcpProcess                                   # all TCP connections with their process
