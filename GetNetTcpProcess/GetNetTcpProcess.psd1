@@ -27,7 +27,7 @@ Author = 'Joe Brown'
 CompanyName = 'Joe Brown'
 
 # Copyright statement for this module
-Copyright = '(c) 2023 Joe Brown. Licensed under the GNU General Public License v3.0.'
+Copyright = '(c) 2023-2026 Joe Brown. Licensed under the GNU General Public License v3.0.'
 
 # Description of the functionality provided by this module
 Description = 'Shows which process owns each TCP port on Windows, like netstat -ano but returning PowerShell objects. Get-NetTcpProcess combines Get-NetTCPConnection with Win32_Process and returns one object per connection with the local and remote address and port, the TCP state, and the owning process name, ID and path. Optional switches add the parent process and the command line. Filter by one or more TCP states with -State. Works in Windows PowerShell 5.1 and PowerShell 7+ on Windows.'
