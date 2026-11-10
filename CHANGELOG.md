@@ -2,6 +2,15 @@
 
 All notable changes to GetNetTcpProcess are listed here. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the module uses [semantic versioning](https://semver.org/).
 
+## [1.1.0] - 2026-11-10
+
+### Changed
+- **License: GNU GPL v3 changed to the MIT License.** Versions 1.0.0 and 1.0.1 were released under GPL v3 and remain under it; this and later versions are released under MIT.
+- The "do not republish as your own" author note in the help and docs is replaced by a short MIT copyright notice.
+- The manifest's `LicenseUri` now points at the license for this version's tag (`v1.1.0`) rather than at `main`, so each gallery version links to the license it was released under.
+
+`Get-NetTcpProcess` behaves exactly as in 1.0.1.
+
 ## [1.0.1] - 2026-11-10
 
 Documentation only. `Get-NetTcpProcess` behaves exactly as in 1.0.0.
@@ -46,5 +55,6 @@ First release as a module on the PowerShell Gallery.
 - `ParentProcess` is now a string with the parent's name.
 - The process with PID 0 is named `System Idle Process` (as `Win32_Process` reports it) instead of `Idle`.
 
-[1.0.1]: https://github.com/joeb1kenobe/GetNetTcpProcess/compare/490ff9f...main
+[1.1.0]: https://github.com/joeb1kenobe/GetNetTcpProcess/compare/v1.0.1...v1.1.0
+[1.0.1]: https://github.com/joeb1kenobe/GetNetTcpProcess/compare/490ff9f...v1.0.1
 [1.0.0]: https://www.powershellgallery.com/packages/GetNetTcpProcess/1.0.0

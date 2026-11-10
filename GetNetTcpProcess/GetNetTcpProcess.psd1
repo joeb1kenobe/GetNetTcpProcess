@@ -12,7 +12,7 @@
 RootModule = 'GetNetTcpProcess.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0.1'
+ModuleVersion = '1.1.0'
 
 # Supported PSEditions
 CompatiblePSEditions = 'Desktop', 'Core'
@@ -27,7 +27,7 @@ Author = 'Joe Brown'
 CompanyName = 'Joe Brown'
 
 # Copyright statement for this module
-Copyright = '(c) 2023-2026 Joe Brown. Licensed under the GNU General Public License v3.0.'
+Copyright = '(c) 2023-2026 Joe Brown. Licensed under the MIT License.'
 
 # Description of the functionality provided by this module
 Description = 'Shows which process owns each TCP port on Windows, like netstat -ano but returning PowerShell objects. Get-NetTcpProcess combines Get-NetTCPConnection with Win32_Process and returns one object per connection with the local and remote address and port, the TCP state, and the owning process name, ID and path. Optional switches add the parent process and the command line. Filter by one or more TCP states with -State. Works in Windows PowerShell 5.1 and PowerShell 7+ on Windows.'
@@ -98,7 +98,7 @@ PrivateData = @{
         Tags = 'Windows', 'Network', 'TCP', 'Port', 'Process', 'Netstat'
 
         # A URL to the license for this module.
-        LicenseUri = 'https://github.com/joeb1kenobe/GetNetTcpProcess/blob/main/LICENSE'
+        LicenseUri = 'https://github.com/joeb1kenobe/GetNetTcpProcess/blob/v1.1.0/LICENSE'
 
         # A URL to the main website for this project.
         ProjectUri = 'https://github.com/joeb1kenobe/GetNetTcpProcess'
@@ -107,7 +107,7 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '1.0.1: Documentation only; no change in behavior. Adds a full README, a command reference (docs/Get-NetTcpProcess.md) and a changelog; completes the comment-based help (all parameters, output properties, eight examples, notes) so Get-Help Get-NetTcpProcess -Full and -Online are useful. See https://github.com/joeb1kenobe/GetNetTcpProcess/blob/main/CHANGELOG.md'
+        ReleaseNotes = '1.1.0: Relicensed under the MIT License (previously GNU GPL v3). No change in behavior. Versions 1.0.0 and 1.0.1 were released under GPL v3 and remain under it. See https://github.com/joeb1kenobe/GetNetTcpProcess/blob/main/CHANGELOG.md'
 
         # Prerelease string of this module
         # Prerelease = ''

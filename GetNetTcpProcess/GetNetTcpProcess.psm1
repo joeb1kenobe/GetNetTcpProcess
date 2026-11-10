@@ -103,9 +103,8 @@ Objects have more than four properties, so PowerShell shows them as a list
 by default. Format-Table drops columns that do not fit the window, so pick
 the columns you need with -Property.
 
-Code by Joe Brown (joeb1kenobe). Feel free to use this code, but do not
-republish it as your own. If you discover a bug or see a way to improve the
-code, please submit a pull request at
+Copyright (c) 2023-2026 Joe Brown (joeb1kenobe). Licensed under the MIT
+License; see the LICENSE file. Bug reports and pull requests are welcome at
 https://github.com/joeb1kenobe/GetNetTcpProcess
 
 .LINK
